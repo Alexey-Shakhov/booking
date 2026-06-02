@@ -22,8 +22,8 @@ export default function BookingsPage() {
 
             const mappedBookings: Booking[] = bookingsData.map(booking => ({
                 ...booking,
-                startUtc: booking.startUtc.toISOString(), // Convert Date to ISO string
-                endUtc: booking.endUtc.toISOString(),     // Convert Date to ISO string
+                startUtc: booking.startUtc, // Convert Date to ISO string
+                endUtc: booking.endUtc,     // Convert Date to ISO string
                 notes: booking.notes ?? null
             }));
 

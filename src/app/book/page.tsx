@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation'
 import { DateTime } from "luxon";
-import { getAllRooms, getBookingsByRoom, hasConflict, createBooking } from "@/app/db";
+import { getAllRooms, getBookingsByRoom, hasConflict, addBooking } from "@/app/db";
 import { Room } from '@/app/types';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -90,8 +90,8 @@ export default function Book() {
         }
 
         // Convert local time to UTC for storage
-        const startUtc = DateTime.fromISO(time_start, { zone: 'local' }).toUTC().toJSDate();
-        const endUtc = DateTime.fromISO(time_end, { zone: 'local' }).toUTC().toJSDate();
+        const startUtc = DateTime.fromISO(time_start, { zone: 'local' }).toUTC().toISO()!;
+        const endUtc = DateTime.fromISO(time_end, { zone: 'local' }).toUTC().toISO()!;
 
         // Check for conflicts
         const conflict = await hasConflict(roomId, startUtc, endUtc);
@@ -110,13 +110,13 @@ export default function Book() {
 
         // Create booking
         try {
-            await createBooking({
+            await addBooking({
                 resourceType: "room",
                 resourceId: roomId,
                 title,
                 startUtc,
                 endUtc,
-                notes: notes || undefined
+                notes: notes
             });
 
             toast.success("Бронирование успешно создано!");
