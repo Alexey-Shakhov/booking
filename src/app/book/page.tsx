@@ -32,23 +32,22 @@ export default function Book() {
 
     const findAvailableSlots = async (
         roomId: number,
-        selectedDate: string
+        dateLocal: string
     ): Promise<{ start: DateTime, end: DateTime }[]> => {
-        // Get existing bookings for this room
         const existingBookings = await getBookingsByRoom(roomId);
 
-        // Convert to local time and filter for selected date
         const roomBookings = existingBookings
             .map(b => ({
-                start: DateTime.fromISO(b.startUtc.toString()).toLocal(),
-                end: DateTime.fromISO(b.endUtc.toString()).toLocal()
+                start: DateTime.fromJSDate(b.startUtc).toLocal(),
+                end: DateTime.fromJSDate(b.endUtc).toLocal()
             }))
-            .filter(b => b.start.hasSame(DateTime.fromISO(selectedDate), 'day'))
+            .filter(b => b.start.isValid && b.end.isValid) // safety check
+            .filter(b => b.start.hasSame(DateTime.fromISO(dateLocal, { zone: 'local' }), 'day'))
             .sort((a, b) => a.start.toMillis() - b.start.toMillis());
 
         const availableSlots: { start: DateTime, end: DateTime }[] = [];
-        const dayStart = DateTime.fromISO(selectedDate).set({ hour: 9, minute: 0 });
-        const dayEnd = DateTime.fromISO(selectedDate).set({ hour: 21, minute: 0 });
+        const dayStart = DateTime.fromISO(dateLocal, { zone: 'local' }).set({ hour: 9, minute: 0 });
+        const dayEnd = DateTime.fromISO(dateLocal, { zone: 'local' }).set({ hour: 21, minute: 0 });
 
         let lastEnd = dayStart;
 
@@ -99,16 +98,14 @@ export default function Book() {
         if (conflict) {
             toast.error("Ошибка: выбранное время уже забронировано!");
 
-            // Find available slots
-            const selectedDateTime = DateTime.fromISO(time_start);
-            const slots = await findAvailableSlots(roomId, selectedDateTime.toISODate()!);
+            const dateLocal = DateTime.fromISO(time_start);
+            const slots = await findAvailableSlots(roomId, dateLocal.toISODate()!);
             setAvailableSlots(slots);
             setShowSuggestions(true);
             setIsSubmitting(false);
             return;
         }
 
-        // Create booking
         try {
             await addBooking({
                 resourceType: "room",
@@ -121,7 +118,6 @@ export default function Book() {
 
             toast.success("Бронирование успешно создано!");
 
-            // Redirect after 2 seconds
             setTimeout(() => {
                 router.push('/');
             }, 2000);

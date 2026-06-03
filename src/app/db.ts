@@ -67,13 +67,12 @@ export async function deleteBooking(id: number) {
     return prisma.booking.delete({ where: { id } })
 }
 
-// Fixed conflict detection
 export async function hasConflict(roomId: number, startUtc: Date, endUtc: Date): Promise<boolean> {
     const overlappingBookings = await prisma.booking.count({
         where: {
             resourceId: roomId,
-            startUtc: { lt: endUtc },  // Existing starts before new ends
-            endUtc: { gt: startUtc }    // Existing ends after new starts
+            startUtc: { lt: endUtc },
+            endUtc: { gt: startUtc }
         }
     })
     return overlappingBookings > 0
