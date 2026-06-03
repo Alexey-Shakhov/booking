@@ -1,7 +1,6 @@
 "use client";
 
 import type { Booking, Room } from "@/app/types"
-import { utcToLocalDisplay } from "../utils";
 import { deleteBooking } from "../db";
 import { useState } from "react";
 
@@ -36,8 +35,8 @@ export const BookingCard = ({ booking, rooms }: BookingCardProps) => {
             <td className="">{booking.resourceType}</td>
             <td className="">{booking.title}</td>
             <td className="">{booking.notes}</td>
-            <td className="">{utcToLocalDisplay(booking.startUtc.toString()!)}</td>
-            <td className="">{utcToLocalDisplay(booking.endUtc.toString()!)}</td>
+            <td className="">{booking.startUtc.toLocaleString()!}</td>
+            <td className="">{booking.endUtc.toLocaleString()!}</td>
             <td className=""><button className="bg-blue-500 text-white p-2 rounded"
                 onClick={() => deleteThisBooking(booking.id!)}>
                 Удалить

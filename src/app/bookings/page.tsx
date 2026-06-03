@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { getAllBookings, getAllRooms, deleteBooking } from "@/app/db";
 import { Booking, Room } from "@/app/types";
-import { utcToLocalDisplay } from "@/app/utils";
 import toast, { Toaster } from "react-hot-toast";
 import BookingCard from "./booking-card";
 
