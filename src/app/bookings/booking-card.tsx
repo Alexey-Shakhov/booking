@@ -7,7 +7,7 @@ import { useState } from "react";
 
 interface BookingCardProps {
     booking: Booking;
-    rooms: Room[]; // Add rooms prop
+    rooms: Room[];
 }
 
 export const BookingCard = ({ booking, rooms }: BookingCardProps) => {
@@ -31,7 +31,7 @@ export const BookingCard = ({ booking, rooms }: BookingCardProps) => {
         );
     }
     return (
-        <tr key={booking.id}><td className="*:text-left">{booking.id}</td>
+        <tr><td className="*:text-left">{booking.id}</td>
             <td className="">{getRoomName(booking.resourceId)}</td>
             <td className="">{booking.resourceType}</td>
             <td className="">{booking.title}</td>

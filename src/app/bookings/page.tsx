@@ -5,6 +5,7 @@ import { getAllBookings, getAllRooms, deleteBooking } from "@/app/db";
 import { Booking, Room } from "@/app/types";
 import { utcToLocalDisplay } from "@/app/utils";
 import toast, { Toaster } from "react-hot-toast";
+import BookingCard from "./booking-card";
 
 export default function BookingsPage() {
     const [bookings, setBookings] = useState<Booking[]>([]);
@@ -19,15 +20,6 @@ export default function BookingsPage() {
                 getAllBookings(),
                 getAllRooms()
             ]);
-
-            /*
-            const mappedBookings: Booking[] = bookingsData.map(booking => ({
-                ...booking,
-                startUtc: booking.startUtc, // Convert Date to ISO string
-                endUtc: booking.endUtc,     // Convert Date to ISO string
-                notes: booking.notes ?? null
-            }));
-            */
 
             setBookings(bookingsData);
             setRooms(roomsData);
@@ -128,23 +120,7 @@ export default function BookingsPage() {
                         </thead>
                         <tbody>
                             {filteredBookings.map((booking) => (
-                                <tr key={booking.id} className="hover:bg-gray-50">
-                                    <td className="p-3 border">{booking.id}</td>
-                                    <td className="p-3 border">{getRoomName(booking.resourceId)}</td>
-                                    <td className="p-3 border">{booking.resourceId}</td>
-                                    <td className="p-3 border">{booking.title}</td>
-                                    <td className="p-3 border">{booking.notes || "-"}</td>
-                                    <td className="p-3 border">{utcToLocalDisplay(booking.startUtc.toString()!)}</td>
-                                    <td className="p-3 border">{utcToLocalDisplay(booking.endUtc.toString()!)}</td>
-                                    <td className="p-3 border">
-                                        <button
-                                            onClick={() => handleDelete(booking.id!)}
-                                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors"
-                                        >
-                                            Удалить
-                                        </button>
-                                    </td>
-                                </tr>
+                                <BookingCard key={booking.id} rooms={rooms} booking={booking} />
                             ))}
                         </tbody>
                     </table>
