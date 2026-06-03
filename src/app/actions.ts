@@ -1,4 +1,4 @@
-'use client';
+'use server';
 
 import { DateTime } from 'luxon'
 import {
@@ -24,7 +24,7 @@ export async function updateRoomAction(id: number, formData: FormData) {
     const capacity = parseInt(formData.get('capacity') as string)
     const features = (formData.get('features') as string).split(',').map(f => f.trim())
 
-    await updateRoom({ name, capacity, features }, id)
+    await updateRoom(id, { name, capacity, features })
 }
 
 export async function deleteRoomAction(id: number) {
@@ -38,8 +38,8 @@ export async function createBookingAction(formData: FormData, roomId: number) {
     const title = formData.get('title') as string
     const notes = formData.get('notes') as string
 
-    const startUtc = DateTime.fromISO(time_start, { zone: 'local' }).toUTC().toString()
-    const endUtc = DateTime.fromISO(time_end, { zone: 'local' }).toUTC().toString()
+    const startUtc = DateTime.fromISO(time_start, { zone: 'local' }).toUTC().toJSDate();
+    const endUtc = DateTime.fromISO(time_end, { zone: 'local' }).toUTC().toJSDate();
 
     const conflict = await hasConflict(roomId, startUtc, endUtc)
 

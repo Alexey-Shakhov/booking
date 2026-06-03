@@ -20,14 +20,16 @@ export default function BookingsPage() {
                 getAllRooms()
             ]);
 
+            /*
             const mappedBookings: Booking[] = bookingsData.map(booking => ({
                 ...booking,
                 startUtc: booking.startUtc, // Convert Date to ISO string
                 endUtc: booking.endUtc,     // Convert Date to ISO string
                 notes: booking.notes ?? null
             }));
+            */
 
-            setBookings(mappedBookings);
+            setBookings(bookingsData);
             setRooms(roomsData);
         } catch (error) {
             console.error("Failed to load data:", error);
@@ -132,8 +134,8 @@ export default function BookingsPage() {
                                     <td className="p-3 border">{booking.resourceId}</td>
                                     <td className="p-3 border">{booking.title}</td>
                                     <td className="p-3 border">{booking.notes || "-"}</td>
-                                    <td className="p-3 border">{utcToLocalDisplay(booking.startUtc)}</td>
-                                    <td className="p-3 border">{utcToLocalDisplay(booking.endUtc)}</td>
+                                    <td className="p-3 border">{utcToLocalDisplay(booking.startUtc.toString()!)}</td>
+                                    <td className="p-3 border">{utcToLocalDisplay(booking.endUtc.toString()!)}</td>
                                     <td className="p-3 border">
                                         <button
                                             onClick={() => handleDelete(booking.id!)}

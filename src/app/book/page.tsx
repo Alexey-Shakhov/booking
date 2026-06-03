@@ -90,8 +90,8 @@ export default function Book() {
         }
 
         // Convert local time to UTC for storage
-        const startUtc = DateTime.fromISO(time_start, { zone: 'local' }).toUTC().toISO()!;
-        const endUtc = DateTime.fromISO(time_end, { zone: 'local' }).toUTC().toISO()!;
+        const startUtc = DateTime.fromISO(time_start, { zone: 'local' }).toUTC().toJSDate();
+        const endUtc = DateTime.fromISO(time_end, { zone: 'local' }).toUTC().toJSDate();
 
         // Check for conflicts
         const conflict = await hasConflict(roomId, startUtc, endUtc);

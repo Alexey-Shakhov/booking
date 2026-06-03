@@ -17,6 +17,6 @@ export interface Booking {
     resourceType: string;
     title: string;
     notes: string | null;
-    startUtc: string;
-    endUtc: string;
+    startUtc: Date;
+    endUtc: Date;
 }

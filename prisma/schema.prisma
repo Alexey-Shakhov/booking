@@ -5,9 +5,33 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "src/app/generated/prisma"
+  output = "../generated/prisma_client"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model Room {
+  id        Int      @id @default(autoincrement())
+  name      String
+  capacity  Int
+  features  String[] // PostgreSQL array
+  bookings  Booking[]
+  
+  @@map("rooms")
+}
+
+model Booking {
+  id           Int      @id @default(autoincrement())
+  resourceType String
+  resourceId   Int
+  title        String
+  startUtc     DateTime
+  endUtc       DateTime
+  notes        String?
+  room         Room     @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  
+  @@index([resourceId])
+  @@map("bookings")
 }

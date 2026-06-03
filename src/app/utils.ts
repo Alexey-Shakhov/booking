@@ -26,22 +26,9 @@ export function utcToLocalDisplay(utcString: string): string {
     return DateTime.fromISO(utcString).setZone('local').toFormat('dd-MM-yyyy HH:mm');
 }
 
-export function hasConflict(
-    newStartUtc: string,
-    newEndUtc: string,
-    existingBookings: Booking[]
-): boolean {
-    for (const b of existingBookings) {
-        if (newStartUtc < b.endUtc && newEndUtc > b.startUtc) {
-            return true;
-        }
-    }
-    return false;
-}
-
 export function findConflictingBookings(
-    newStartUtc: string,
-    newEndUtc: string,
+    newStartUtc: Date,
+    newEndUtc: Date,
     existing: Booking[]
 ): Booking[] {
     return existing.filter(b => newStartUtc < b.endUtc && newEndUtc > b.startUtc);

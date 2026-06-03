@@ -1,145 +1,80 @@
-import { openDB, IDBPDatabase, DBSchema } from "idb";
-import { Booking, Asset, Room } from "./types";
+'use server';
 
-interface BookingDB extends DBSchema {
-    'rooms': {
-        key: number;
-        value: Room;
-        indexes: { 'features': string[] };
-    };
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
-    'bookings': {
-        key: number;
-        value: Booking;
-        indexes: { 'resourceId': number };
-    };
+const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL!,
+});
 
-    'assets': {
-        key: number;
-        value: Asset;
-    };
+/*
+const globalForPrisma = globalThis as unknown as {
+    prisma: PrismaClient | undefined
 }
 
-let db: IDBPDatabase<BookingDB> | null = null;
-const DBNAME = 'booking-database'
+export const prisma = globalForPrisma.prisma ?? new PrismaClient()
 
-export async function initDB(): Promise<IDBPDatabase<BookingDB>> {
-    if (db) return db;
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+*/
 
-    db = await openDB(DBNAME, 1, {
-        upgrade(db) {
-            const roomsStore = db.createObjectStore('rooms', {
-                keyPath: 'id',
-                autoIncrement: true,
-            });
-            roomsStore.createIndex('features', 'features');
-
-            const assetsStore = db.createObjectStore('assets', {
-                keyPath: 'id',
-                autoIncrement: true,
-            });
-
-            const bookingsStore = db.createObjectStore('bookings', {
-                keyPath: 'id',
-                autoIncrement: true,
-            });
-            bookingsStore.createIndex('resourceId', 'resourceId');
-
-            // Add sample rooms
-            db.createObjectStore('rooms', { keyPath: 'id', autoIncrement: true });
-
-            // Add sample data after stores are created
-            const roomsStore2 = db.objectStoreNames.contains('rooms') ?
-                db.transaction('rooms', 'readwrite').objectStore('rooms') : null;
-
-            if (roomsStore2) {
-                roomsStore2.add({
-                    name: "Кабинет 101",
-                    capacity: 25,
-                    features: ["whiteboard"]
-                });
-                roomsStore2.add({
-                    name: "Кабинет 102",
-                    capacity: 30,
-                    features: ["projector", "whiteboard"]
-                });
-            }
-        },
-    });
-
-    return db;
-}
+const prisma = new PrismaClient({ adapter });
 
 // Room operations
-export async function getAllRooms(): Promise<Room[]> {
-    const db = await initDB();
-    return db.getAll('rooms');
+export async function getAllRooms() {
+    return prisma.room.findMany()
 }
 
-export async function getRoom(id: number): Promise<Room | undefined> {
-    const db = await initDB();
-    return db.get('rooms', id);
+export async function getRoom(id: number) {
+    return prisma.room.findUnique({ where: { id } })
 }
 
-export async function addRoom(room: Omit<Room, 'id'>): Promise<number> {
-    const db = await initDB();
-    return db.add('rooms', room);
+export async function addRoom(data: { name: string; capacity: number; features: string[] }) {
+    return prisma.room.create({ data })
 }
 
-export async function updateRoom(room: Room, id: number): Promise<void> {
-    const db = await initDB();
-    await db.put('rooms', room, id);
+export async function updateRoom(id: number, data: { name: string; capacity: number; features: string[] }) {
+    return prisma.room.update({ where: { id }, data })
 }
 
-export async function deleteRoom(id: number): Promise<void> {
-    const db = await initDB();
-    await db.delete('rooms', id);
+export async function deleteRoom(id: number) {
+    return prisma.room.delete({ where: { id } })
 }
 
 // Booking operations
-export async function getAllBookings(): Promise<Booking[]> {
-    const db = await initDB();
-    return db.getAll('bookings');
+export async function getAllBookings() {
+    return prisma.booking.findMany()
 }
 
-export async function getBookingsByRoom(roomId: number): Promise<Booking[]> {
-    const db = await initDB();
-    const index = db.transaction('bookings').store.index('resourceId');
-    return index.getAll(roomId);
+export async function getBookingsByRoom(roomId: number) {
+    return prisma.booking.findMany({
+        where: { resourceId: roomId },
+        orderBy: { startUtc: 'asc' }
+    })
 }
 
-export async function addBooking(booking: Omit<Booking, 'id'>): Promise<number> {
-    const db = await initDB();
-    return db.add('bookings', booking);
+export async function addBooking(data: {
+    resourceType: string
+    resourceId: number
+    title: string
+    startUtc: Date
+    endUtc: Date
+    notes?: string
+}) {
+    return prisma.booking.create({ data })
 }
 
-export async function updateBooking(booking: Booking): Promise<void> {
-    const db = await initDB();
-    await db.put('bookings', booking);
+export async function deleteBooking(id: number) {
+    return prisma.booking.delete({ where: { id } })
 }
 
-export async function deleteBooking(id: number): Promise<void> {
-    const db = await initDB();
-    await db.delete('bookings', id);
-}
-
-// Conflict checking
-export async function hasConflict(roomId: number, startUtc: string, endUtc: string): Promise<boolean> {
-    const bookings = await getBookingsByRoom(roomId);
-    return bookings.some(booking => {
-        const bookingStart = booking.startUtc;
-        const bookingEnd = booking.endUtc;
-        return (startUtc < bookingEnd && endUtc > bookingStart);
-    });
-}
-
-// Asset operations (if needed)
-export async function getAllAssets(): Promise<Asset[]> {
-    const db = await initDB();
-    return db.getAll('assets');
-}
-
-export async function addAsset(asset: Omit<Asset, 'id'>): Promise<number> {
-    const db = await initDB();
-    return db.add('assets', asset);
+// Fixed conflict detection
+export async function hasConflict(roomId: number, startUtc: Date, endUtc: Date): Promise<boolean> {
+    const overlappingBookings = await prisma.booking.count({
+        where: {
+            resourceId: roomId,
+            startUtc: { lt: endUtc },  // Existing starts before new ends
+            endUtc: { gt: startUtc }    // Existing ends after new starts
+        }
+    })
+    return overlappingBookings > 0
 }
